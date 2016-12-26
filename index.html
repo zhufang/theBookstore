@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="appModule" class="ng-scope">
+<head>
+    <meta charset="UTF-8">
+    <title>图书管理</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+</head>
+<body>
+<div class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a href="" class="navbar-brand">自营书店</a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav">
+                <li><a href="#/">首页</a></li>
+                <li><a href="#/bookList">列表页</a></li>
+                <li><a href="#/bookAdd">增加图书</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div ng-view class="container"></div>
+<script src="node_modules/angular/angular.js"></script>
+<script src="node_modules/angular-resource/angular-resource.js"></script>
+<script src="node_modules/angular-route/angular-route.js"></script>
+<script>
+    var app=angular.module('appModule',['ngResource','ngRoute']);
+    //ngRoute：路由中的服务配置使用
+    //通过hash实现路径的更改调用不同的逻辑，不会刷新页面，而且会产生历史管理
+    app.factory('$book',function ($resource) {
+        return $resource('/books/:id',null,{
+            update:{
+                method:'PUT'
+            }
+        })
+    });
+    app.config(function ($routeProvider) {//$routeProvider:当前服务的一个实例
+        $routeProvider.when('/',{
+            templateUrl:'tmpl/index.html',
+            controller:'indexCtrl'
+        }).when('/bookAdd',{
+            templateUrl:'tmpl/bookAdd.html',
+            controller:'addCtrl'
+        }).when('/bookList',{
+            templateUrl:'tmpl/bookList.html',
+            controller:'listCtrl'
+            //  /bookDetail/1     $routeParams:{bookId:3}
+        }).when('/bookDetail/:bookId',{
+            templateUrl:'tmpl/bookDetail.html',
+            controller:'detailCtrl'
+        }).otherwise('/');//其他无效地址，停留在首页
+    });
+    //前后端分离，后端值提供页面数据，前端有自己的路由，后端也有自己的
+    //以前做的都是html里面ajax请求，请求webstorm自带的服务，要让自己的服务器接受到请求，响应会浏览器端的内容
+    app.controller('detailCtrl',function ($scope,$routeParams,$book,$location) {
+        var bookId=$routeParams.bookId;
+        $book.get({id:bookId}).$promise.then(function (data) {
+            $scope.newBook=JSON.parse(JSON.stringify(data));
+            $scope.book =data;
+        });//通过id去后台查询到对应的那一条数据
+        //删除的逻辑
+        $scope.remove=function (id) {
+            //key和value相同时，可以缩写成一个id，这是es6的写法
+            $book.delete({id:id}).$promise.then(function () {
+                $location.path('/bookList');
+            });
+        };
+        $scope.flag=true;
+        $scope.updateBook=function () {
+            $book.update({id:bookId},$scope.newBook).$promise.then(function (data) {
+                $scope.flag=true;
+                $scope.book=data;
+            })
+        };
+        $scope.cancel=function () {
+            $scope.flag=true;//可能点击取消之前有改动在将最后给绑定给默认的属性
+            $scope.newBook=JSON.parse(JSON.stringify($scope.book));
+        }
+    });
+    app.controller('indexCtrl',function ($scope) {
+        $scope.name = '我的书店';
+    });
+    app.controller('addCtrl',function ($scope,$book,$location) {//ngRout $location 的服务
+        //保存数据
+        $scope.saveBook=function () {
+            //当保存完成后需要跳转到列表页面
+            $book.save($scope.book).$promise.then(function () {
+                $location.path('/bookList');//重定向页面
+            });
+        }
+    });
+    app.controller('listCtrl',function ($scope,$book) {
+        //将数据获取到，来渲染list页面
+        $scope.lists=$book.query();
+        //console.log($scope.lists);
+        /*$book.query().$promise.then(function (data) {
+            //data:就是后台返回的数据
+            $scope.lists=data;
+        })*/
+    });
+</script>
+</body>
+</html>
