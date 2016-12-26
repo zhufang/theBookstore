@@ -29,3 +29,13 @@ UI-Router可以通过为ui-view命名的方式支持多个视图，如:
 ```
 
 ## 列表页效果图
+![img](https://github.com/zhufang/theBookstore/blob/master/img/list.png)
+
+## 详情页效果图
+![img](https://github.com/zhufang/theBookstore/blob/master/img/detail.png)
+
+## 修改页效果图
+![img](https://github.com/zhufang/theBookstore/blob/master/img/modify.png)
+
+## 增加页效果图
+![img](https://github.com/zhufang/theBookstore/blob/master/img/add.png)
